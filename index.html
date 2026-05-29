@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>放学快乐 · 不如一起散散步</title>
+    <style>
+        /* 日系高级画册美学 */
+        :root {
+            --bg-paper: #fcfbf9;
+            --text-dark: #222222;
+            --accent-red: #bd3124;
+            --line-color: #e6e4e0;
+            --text-muted: #8c8a85;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-paper);
+            color: var(--text-dark);
+            font-family: "PingFang SC", "Hiragino Sans GB", sans-serif;
+            padding: 80px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            letter-spacing: 0.08em;
+        }
+
+        .header-meta {
+            width: 100%; max-width: 1000px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px solid var(--text-dark); padding-bottom: 20px; margin-bottom: 80px;
+        }
+        .meta-title { font-size: 12px; text-transform: uppercase; color: var(--text-dark); font-weight: bold; }
+
+        .main-content { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 100px; }
+
+        .resizable-photo-box {
+            position: relative; width: 100%; height: 380px;
+            background-color: transparent; border: 1px dashed var(--line-color);
+            border-radius: 2px; overflow: hidden; cursor: pointer;
+            resize: both;
+        }
+        .resizable-photo-box:hover { border-color: var(--text-muted); }
+        .resizable-photo-box img { width: 100%; height: 100%; object-fit: cover; display: none; pointer-events: none; }
+        .resizable-photo-box.has-image { border: none; }
+        .resizable-photo-box.has-image img { display: block; }
+
+        .intro-journal { display: grid; grid-template-columns: 1fr 2fr; gap: 40px; align-items: flex-start; }
+        .intro-left { font-size: 38px; font-family: "Times New Roman", serif; font-weight: 300; color: var(--accent-red); }
+        .intro-left .subtitle { font-size: 13px; color: var(--text-muted); margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .intro-right h1 { font-size: 28px; font-weight: 400; margin-bottom: 25px; outline: none; }
+        .intro-text { font-size: 14px; line-height: 2.2; color: #444; outline: none; text-align: justify; }
+
+        .hint-text {
+            width: 100%; max-width: 1000px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: -20px;
+            margin-bottom: -60px;
+            letter-spacing: 2px;
+        }
+
+        .chapter-section { display: flex; flex-direction: column; gap: 40px; }
+        .chapter-meta { display: flex; align-items: center; gap: 20px; color: var(--text-muted); font-size: 11px; }
+        .chapter-meta .line { flex-grow: 1; height: 1px; background-color: var(--line-color); }
+        .chapter-title { font-size: 18px; font-weight: 400; color: var(--text-dark); outline: none; }
+
+        .songs-container { display: flex; flex-direction: column; gap: 20px; }
+        .song-node { border-bottom: 1px solid var(--line-color); padding-bottom: 15px; }
+        .song-header { display: flex; align-items: baseline; gap: 15px; cursor: pointer; user-select: none; }
+        .song-num { font-family: "Times New Roman", serif; font-size: 15px; color: var(--accent-red); font-weight: bold; width: 25px; }
+        .song-name { font-size: 16px; font-weight: 400; transition: color 0.2s; outline: none; }
+        .song-node:hover .song-name { color: var(--accent-red); }
+
+        .song-drawer { 
+            max-height: 0; overflow: hidden; 
+            transition: max-height 0.6s cubic-bezier(0.25, 1, 0.5, 1); 
+        }
+        .song-node.active .song-drawer { max-height: 1500px; }
+        
+        .drawer-inner { padding: 30px 0 40px 40px; display: grid; grid-template-columns: 1fr 1.2fr; gap: 60px; }
+        .details-lyrics-block { display: flex; flex-direction: column; gap: 10px; }
+        .details-info-block { display: flex; flex-direction: column; gap: 35px; }
+        
+        .block-label { font-size: 10px; font-weight: bold; color: var(--text-muted); letter-spacing: 3px; border-bottom: 1px solid var(--line-color); padding-bottom: 4px; margin-bottom: 8px; width: fit-content; }
+        .editable-text { font-size: 13px; line-height: 2; color: #444; outline: none; text-align: justify; white-space: pre-line; }
+        .editable-lyrics { font-size: 13px; line-height: 2.2; color: var(--text-dark); outline: none; white-space: pre-line; font-style: italic; }
+
+        .footer-social {
+            display: flex; justify-content: center; gap: 60px;
+            margin-top: 60px; padding-top: 40px;
+            border-top: 1px solid var(--line-color);
+        }
+        .social-block {
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+        }
+        .social-block img {
+            width: 100px; height: 100px;
+            border: 1px solid var(--line-color); padding: 4px; background: #fff;
+        }
+        .social-block span {
+            font-size: 11px; color: var(--text-muted); letter-spacing: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .drawer-inner { grid-template-columns: 1fr; gap: 40px; padding-left: 0; }
+            .intro-journal { grid-template-columns: 1fr; }
+            .hint-text { margin-top: -40px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-meta">
+        <div class="meta-title">WALK WITH ME</div>
+    </div>
+
+    <div class="main-content">
+        
+       <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+            <img src="poster.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+        </div>
+
+        <section class="intro-journal">
+            <div class="intro-left">
+                <div>2026</div>
+                <div class="subtitle">CONCERT HUSH</div>
+            </div>
+            <div class="intro-right">
+                <h1 class="intro-main-title">放学快乐 · 不如一起散散步</h1>
+                <div class="intro-text">
+                    这里是我们的合唱空间。没有繁杂的排场与刻意的装饰，只有放学铃声响起后，在夏日晚风和树荫里，最干净纯粹的人声。
+                </div>
+            </div>
+        </section>
+
+        <div class="hint-text">— 点击曲目了解详细信息 —</div>
+
+        <section class="chapter-section" id="section-1">
+            <div class="chapter-meta"><span class="chapter-title">第一章 🥤 放学后的冰镇汽水</span><div class="line"></div><span>CHAPTER 01</span></div>
+            <div class="songs-container">
+                
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">01</span><span class="song-name">心墙</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 歌词</div>
+                                <div class="editable-lyrics">一个人 眺望碧海和蓝天
+在心里面 那抹灰就淡一些
+海豚从眼前飞越
+我看见了最阳光的笑脸
+好时光都该被宝贝 因为有限
+我学着不去担心得太远
+不计划太多反而能勇敢冒险
+丰富的过每一天 快乐地看每一天
+第一次遇见阴天遮住你侧脸
+有什么故事好想了解
+我感觉我懂你的特别
+你的心有一道墙 但我发现一扇窗
+偶尔透出一丝暖暖的微光
+就算你有一道墙 我的爱会攀上窗台盛放
+打开窗你会看到悲伤融化</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">哪怕内心筑起防备，只要留出一扇窗，总会有光透进来，总有人能懂你的特别。放学路上，耳机里塞着这首旋律，心里的围墙好像一下就被晚风吹倒了。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song1.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">02</span><span class="song-name">Siyahamba</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 外文歌词</div>
+                                <div class="editable-lyrics">Si-ya-hamb' e-ku-kha-nye-ni kwen-kos.
+We are marching in the light of God.</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">TRANSLATION / 歌词翻译</div><div class="editable-text text-meaning">我们在信仰与希望的光中行进。</div></div>
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">《Siyahamba》是一首源自南非祖鲁族的传统民歌，诞生于种族隔离时期的抗争与希望之中。它的原意是“在神的光中行进”，但在跨文化的合唱语境下，“光”已经超越了宗教范畴，象征着人类对自由、平等与温暖的本能向往。歌曲采用经典的阿卡贝拉无伴奏形式，以厚重的人声叠唱和极具感染力的非洲切分律动，构建出一种原始而磅礴的生命力。在排练这首歌时，我们放弃了刻板的站姿，任由身体的肌肉记忆跟随节拍摇摆。这种发自内心的律动，让每一个音符都变成了我们在光中并肩前行的坚定脚步。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song2.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="chapter-section" id="section-2">
+            <div class="chapter-meta"><span class="chapter-title">第二章 ⛅ 抬头看，云朵在唱歌</span><div class="line"></div><span>CHAPTER 02</span></div>
+            <div class="songs-container">
+                
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">03</span><span class="song-name">舟中晓望</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 歌词</div>
+                                <div class="editable-lyrics">挂席东南望，青山水国遥。
+舳舻争利涉，来往接风潮。
+问我今何适？天台访石桥。
+坐看霞色晓，疑是赤城标。
+
+渔歌忽近忽远 惊起岸边的白鸟
+初阳若隐若现 躲在林雾背后
+一艘艘轻舟载着自由的念头
+随他们而去喝一杯洒脱的酒
+
+风也在唱 问我去向何方
+那天边朝霞 就是心之所向
+漫漫水程 未知通向何处
+行人无数 期许只留梦中</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">扬帆向东南方远望，青山绿水辽阔无垠。江面上船只争相竞渡，迎着风浪穿梭往来。你问我今天要去哪里？我要去天台山寻访那座石桥。静静地看着清晨的满天彩霞，还以为是赤城山的奇景。孟浩然笔下的唐代水乡，在现代合唱的编织下，化作了一场充满狂热与自由的东方航行。乘着轻舟，敬一杯洒脱的酒。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song3.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">04</span><span class="song-name">天空</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 歌词</div>
+                                <div class="editable-lyrics">昨夜星辰昨夜风
+那是无边浪漫暖春
+花树下起阵阵雨 淅沥淅沥 
+
+朝露拥吻山桃花
+院子里面热气新茶
+风铃摇曳屋檐下 嘀嗒嘀嗒
+
+电车还没来 要不要打伞
+不如就一起散散步
+
+I miss you 这四月的天空
+大桥下 河堤旁 抚过柳叶的风
+不如就一起散散步</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">四月的天空下，伴着落雨、花树、新茶与微风。不用考虑电车是否晚点，也不用在意是否带伞，只需要顺应此刻的心意，一起散散步。这里不仅有歌，还有微风和四月的天空。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song4.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">05</span><span class="song-name">O Love</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 外文歌词</div>
+                                <div class="editable-lyrics">O Love
+That will not let me go
+I rest my weary soul in thee
+I give thee back the life I owe
+That in thy ocean depths its flow
+May richer, fuller be
+
+O Joy
+That seeks me through the pain
+I cannot close my heart to thee
+I trace the rainbow through the rain
+And feel the promise is not vain
+That morn shall tearless be</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">TRANSLATION / 歌词翻译</div><div class="editable-text text-meaning">有一种爱，永不放手，让疲惫的灵魂得以安息；有一种喜悦，穿透痛苦而来，让我们在雨中也能寻得彩虹，坚信不再有泪水的清晨终将降临。</div></div>
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">这首歌的文本源自19世纪盲人牧师乔治·马西森（George Matheson）在经历人生重创后写下的诗句。合唱编配通过钢琴连绵不断的琶音与人声的层层推演，将“不肯放手的爱”具象化为一种深邃如海洋的包容力。它并没有试图粉饰现实的痛苦，而是教我们如何在暴风雨中凝视彩虹，在破碎中寻找灵魂的安息处。排练这首作品，对我们而言更像是一场集体的心理疗愈。当四个声部的和声在最高潮处交汇，我们感受到的是一种无视一切现实疲惫与自我怀疑的巨大托举感，仿佛真有一双温柔的手，接住了我们所有的坠落。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song5.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">06</span><span class="song-name">Jaiho</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 外文歌词</div>
+                                <div class="editable-lyrics">Jai Ho, Jai Ho, Jai Ho, Jai Ho
+Aaja Aaja Jind Shamiyaanein Ke Tale
+Aaja Zariwaale Neele Aasmaan Ke Tale
+
+Ratti Ratti Sachi Maine Jaan Gavaayi Hai
+Nach Nach Koylon Pe Raat Bitaayi Hai
+Akhiyon Ki Neend Maine Phoonkon Se Uda Di
+Gin Gin Taarein Maine Ungli Jalaayi Hai
+
+Baila! Baila!
+Ahora conmigo tú baila para hoy
+Por nuestro día
+Te olvidas los problemas lo que sean
+Salud!
+Baila! Baila!
+
+Chakh Le, Ho Chakh Le, Ye Raat Shahad Hai, Chakh Le
+Rakh Le, Haan Dil Hai Dil Aakhri Had Hai, Rakh Le
+Kaala Kaala Kaajal Tera Koi Kaala Jaadoo Hai Na
+Jai Ho!</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">TRANSLATION / 歌词翻译</div><div class="editable-text text-meaning">来吧我的生命，来到这片蔚蓝的天空穹顶之下。我已经燃尽了所有，在这炭火上整夜起舞。所以跳舞吧！把所有的烦恼抛在脑后，为今天的律动干杯！</div></div>
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">作为电影《贫民窟的百万富翁》的经典配乐，《Jai Ho》（印地语意为“祝你胜利”）是一首将印度传统音乐元素与现代流行电音完美缝合的狂欢之作。它的歌词中充斥着“在炭火上起舞”、“燃尽生命”的极致表达，展现了一种在逆境与泥沼中野蛮生长的张扬生命力。曲目中密集的宝莱坞式打击乐节奏与不断向上攀升的高音区，对合唱团的爆发力提出了极高要求。在排练的无数个疲惫夜晚，正是这首歌独有的狂热与律动，让我们彻底卸下了成年人的矜持与防备。每一次齐唱“Jai Ho”，都是一次将烦恼抛诸脑后的释放，是我们用最纯粹的快乐对生活发起的一场华丽反击。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song6.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="chapter-section" id="section-3">
+            <div class="chapter-meta"><span class="chapter-title">第三章 🌾 踩着单车过麦田</span><div class="line"></div><span>CHAPTER 03</span></div>
+            <div class="songs-container">
+                
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">07</span><span class="song-name">放牛班的春天</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 外文歌词</div>
+                                <div class="editable-lyrics">Vois sur ton chemin
+Gamins oubliés égarés
+Donne leur la main Pour les mener
+Vers d'autres lendemains
+Sens au coeur de la nuit
+L'onde d'espoir
+Ardeur de la vie
+Sentier de gloire
+Bonheurs enfantins
+Trop vite oubliés effacés
+Une lumière dorée brille sans fin
+Tout au bout du chemin
+Sens au coeur de la nuit
+L'onde d'espoir
+Ardeur de la vie
+sentier de la gloire</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">TRANSLATION / 歌词翻译</div><div class="editable-text text-meaning">看看你经过的路上，那些被遗忘、迷失的孩子们。向他们伸出手，将他们引向美好的明天。在黑夜的中心，感受希望的微波、生命的热忱和荣耀的归途。</div></div>
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">经典法国电影《放牛班的春天》的主题曲《Vois sur ton chemin》，堪称合唱史上的治愈图腾。这首作品以干净纯粹的童声视点切入，编曲结构如同在黑暗的房间里缓缓推开一扇门：从最初略带迷茫的独唱，逐渐走向多声部交织的恢弘与笃定。歌词中的“被遗忘的孩子”与“黑夜中的微光”，隐喻着每个人在成长过程中都曾经历过的迷茫与自我放逐。当我们用成年的嗓音再次去诠释这首昔日的童声经典，不仅是在致敬那个用音乐治愈一切的“池塘之底”学校，更像是在跨越时空，去牵起当年那个躲在角落里、孤立无援的自己的手，带着他一步步走向充满希望的明天。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song7.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">08</span><span class="song-name">阿妹</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 歌词</div>
+                                <div class="editable-lyrics">雀儿成一双，箸也放一双，红糖水，还在沸。
+炮烟快要放，圆眼撒春床，我的阿妹在何处。
+
+老早捉迷藏，现在也捉迷藏，明朝阿妹要嫁人。
+还小时候妳不肯，上次问我不肯，今日问无人回答，肯或者勿肯。
+三里路，上下天涯，窗台下，又插新花。
+红尘几多人，分离又谁人肯，
+阿妹哟，阿妹呦，慢些走
+
+碎银小项链，珍珠大丁香，阿妹的手，生好兮。
+红裙配祠堂，婚纱配教堂，阿妹会选哪一种。
+还记得赤里膊脚在沙滩，太阳落山帮你系鞋带，你说带我回家可以不可以。
+
+我说做事干最重要，现在我好比一只鹞，飘来飘去，你能否再等一等。
+三里路，半生天涯，窗台下，秋冬春夏。
+红尘几多人，分离又谁人肯，阿妹哟慢些走。</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">歌曲融合了吴侬软语的温婉，讲述了一段跨越时间的青涩爱恋与离愁别绪，充满了江南水乡的画面感。呢喃的方言里，藏着岁月最温柔的角落。每一次唱起，都像是翻开了一本泛黄的老相册，慢慢回忆起那个扎着麻花辫的阿妹。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song8.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">09</span><span class="song-name">玉门关</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 歌词</div>
+                                <div class="editable-lyrics">漫漫黄沙云空遮 瑟瑟寒风铁剑冷
+故乡 在那很远很远的地方
+异邦人 你在盼着何处的月光
+
+风渐停沙渐息 细无声飞雪临
+葫芦河畔扬尘 十万铁骑叩关
+长夜雪满天为吾披肩 大唐好儿郎气贯昊天
+腰悬三尺剑愿为君锋 随君入敌营生死何惧
+
+人衔枚 马裹蹄 敌军已百步内
+人衔枚 马裹蹄 敌军已十步内
+
+远在白云外
+黄沙散落在胸前 黄河远在天那边
+夜幕渐渐褪去 曙色悄悄降临
+
+黄河远在沙烟外 十人戍边三人还
+飞雪啊 盖住了城墙
+风儿啊 何处是江南
+黄河远上白云间 一片孤城万仞山
+笛声悠悠 伴我入梦
+杨柳新枝 带我回故乡
+
+黄河远上白云间 一片孤城万仞山
+羌笛何需怨杨柳 春风不度玉门关</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">唱尽了大唐将士戍边卫国的悲壮与思乡之情。长夜雪满天，腰悬三尺剑，虽有“春风不度”的苍凉，却也有“气贯昊天”的豪迈。排练这首歌时，每个人都在努力用声音重塑那片漫漫黄沙。从极静的低语到千军万马的爆发，这是我们献给历史的一场壮阔回望。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song9.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">10</span><span class="song-name">风吹麦浪</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 歌词</div>
+                                <div class="editable-lyrics">远处蔚蓝天空下涌动着 金色的麦浪
+就在那里曾是你和我 爱过的地方
+当微风带着收获的味道 吹向我脸庞
+想起你轻柔的话语 曾打湿我眼眶
+
+我们曾在田野里歌唱 在冬季盼望
+却没能等到阳光下 这秋天的景象
+就让曾经的誓言飞舞吧 随西风飘荡
+就像你柔软的长发 曾芬芳我梦乡</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">借着随风起伏的金色麦浪，回忆起曾经的美好与纯真，以及那些在秋风中飘散的誓言。最简单的旋律，却总能轻易拨动心底最柔软的那根弦，仿佛真的有一阵风从舞台吹向了金色的原野。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song10.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="chapter-section" id="section-4">
+            <div class="chapter-meta"><span class="chapter-title">第四章 🚲 影子拉得很长很长</span><div class="line"></div><span>CHAPTER 04</span></div>
+            <div class="songs-container">
+                
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">11</span><span class="song-name">跑！跑！跑起来跟着流星！</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 歌词</div>
+                                <div class="editable-lyrics">跑！跑！跑起来流星！跑！跑！跑起来跟着流星！
+
+想做的事马上就做，不要等到下个瞬间！
+追上那道光线，就能彻底打败时间！
+
+我争分夺秒，和时间赛跑。我漫无目的，混乱而有序。
+你犹豫不决，想来又想去。你有点迟钝，好像个笨人！
+
+不要再想现在出发，碰碰运气或许你能赢！
+我在时间尽头等你，跟上我吧！哈哈哈哈！
+
+流星！流星！流星！流星！
+跑吧！</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">把所有的犹豫抛在脑后，不要顾虑太多。想做的事立刻就去做，去追赶光线，去打败时间。跟着流星跑起来，快乐就在脚下。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song11.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">12</span><span class="song-name">想见你</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 歌词</div>
+                                <div class="editable-lyrics">当爱情遗落成遗迹 用象形刻划成回忆
+想念几个世纪 才是刻骨铭心
+若能回到冰河时期 多想把你抱紧处理
+你的笑多疗愈 让人生也苏醒
+
+失去你的风景 像座废墟 像失落文明
+能否一场奇迹 一线生机
+能不能 又再一次相遇
+
+想见你只想见你 未来过去 我只想见你
+穿越了千个万个 时间线里 人海里相依
+用尽了逻辑心机 推理爱情 最难解的谜
+会不会 你也和我一样 在等待一句 我愿意
+
+任时光更迭了四季 任宇宙物换或星移
+永远不退流行 是青涩的真心
+
+未来先进科技 无法模拟 你拥抱暖意
+如果另个时空 另个身体
+能不能 换另一种结局
+
+想见你每个朝夕 想见你每个表情
+想穿越每个平行 在未来和过去紧紧相依
+想follow每则IG 不错过你的踪迹
+会不会你也一样 等待着那句我愿意</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">穿越了千个万个时间线里，人海里相依。用和声解开最难解的谜题，穿越平行时空，只为在舞台上再一次相遇。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song12.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">13</span><span class="song-name">下班快乐</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 歌词</div>
+                                <div class="editable-lyrics">天空有着多少颗的星辰，地上就有多少段的人生。
+外头无论多么样的寒冷，蜂蜜酒能把我们给焐热。
+欢迎各位光临星河旅馆！
+
+冲在最前面的小孩，马上都给我们让开路。
+要是没有我们发光，你们全部都得冷飕飕。
+我不管我不管我不管！
+第一名必须是我们，暖呼呼胖乎乎的猫人。
+先进晚进全都一样，我这里蜂蜜酒喝到饱。
+不要着急下班快乐，到时候洗个热水澡。
+
+我等按照各自轨迹，参与周而复始的命运。
+迎接黎明，下班快乐！
+愉快地跳舞，来自深蓝夜空的珍珠。
+下班快乐！
+让我们庆祝，属于我们休息的时刻。
+下班快乐！
+尽情地欢呼，泡澡真是让人舒服。
+下班快乐！
+哦！星河旅馆，你是我们温柔的故乡。
+下班快乐！</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">属于我们休息的时刻，把所有的疲惫抛在脑后。在星河旅馆里，点一杯蜂蜜酒，洗一个热水澡，彻底放松。放学啦，下班啦，快乐和松弛永远属于每一个爱唱歌的少年。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song13.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="song-node">
+                    <div class="song-header" onclick="expandSong(this)"><span class="song-num">14</span><span class="song-name">那些年</span></div>
+                    <div class="song-drawer">
+                        <div class="drawer-inner">
+                            <div class="details-lyrics-block">
+                                <div class="block-label">LYRICS / 歌词</div>
+                                <div class="editable-lyrics">又回到最初的起点，记忆中你青涩的脸，
+我们终于来到了这一天。
+桌垫下的老照片，无数回忆连结，
+今天男孩要赴女孩最后的约。
+又回到最初的起点，呆呆地站在镜子前，
+笨拙系上红色领带的结。
+将头发梳成大人模样，穿上一身帅气西装，
+等会儿见你一定比想象美。
+
+好想再回到那些年的时光，
+回到教室座位前后，故意讨你温柔的骂。
+黑板上排列组合，你舍得解开吗？
+谁与谁坐他又爱着她。
+
+那些年错过的大雨，那些年错过的爱情，
+好想拥抱你，拥抱错过的勇气。
+曾经想征服全世界，到最后回首才发现，
+这世界滴滴点点全部都是你。
+
+那些年错过的大雨，那些年错过的爱情，
+好想告诉你，告诉你我没有忘记。
+那天晚上满天星星，平行时空下的约定，
+再一次相遇我会紧紧抱着你，紧紧抱着你。</div>
+                            </div>
+                            <div class="details-info-block">
+                                <div><div class="block-label">STORY / 曲目故事</div><div class="editable-text text-story">那些年错过的雨，那些年错过的爱情。回首才发现，这世界滴滴点点全部都是你。又回到最初的起点，呆呆地站在镜子前。我们终于迎来了期盼已久的这一天。这是送给青春最好的一场毕业典礼。</div></div>
+                                <div id="main-cover-box" class="resizable-photo-box" style="height: auto; border: none; cursor: default; resize: none;">
+                                    <img src="song14.png" alt="Poster" style="display: block; width: 100%; height: auto; pointer-events: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <div class="footer-social">
+        <div class="social-block">
+            <img src="wechat.png" alt="公众号二维码">
+            <span>扫码关注公众号</span>
+        </div>
+        <div class="social-block">
+            <img src="video.png" alt="Bilibili帐号二维码">
+            <span>扫码关注Bilibili帐号</span>
+        </div>
+    </div>
+
+    <script>
+        function expandSong(header) { header.parentElement.classList.toggle('active'); }
+    </script>
+</body>
+</html>
